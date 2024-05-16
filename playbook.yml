@@ -1,0 +1,51 @@
+---
+- name: "[FICHIERS]"
+  hosts: all
+  vars: 
+    check5: "1bfc5dfac042e7cff5392b7838b49ed1"
+
+  tasks:
+    - name: "[FICHIERS] - check md5"
+      stat:
+        path: /tmp/Mokrane.txt
+        get_checksum: yes
+        checksum_algorithm: md5
+      register: sum5
+
+   # - name: "[FICHIERS] - debug"
+   #   debug:
+   #     msg: "{{ sum5.stat.checksum }}"
+   
+    - set_fact: 
+        data: "0"
+      when: sum5.stat.checksum is not defined
+
+    - set_fact: 
+        data: "{{ sum5.stat.checksum }}"
+      when: sum5.stat.checksum is defined
+
+    - name: "[FICHIERS] - Bloc"
+      block:
+        - name: "[FICHIERS] - copier du fichier"
+          copy:
+            src: ./monfichier.txt
+            dest: /tmp/Mokrane.txt
+
+        - name: "[FICHIER] - Ajouter une ligne"
+          lineinfile:
+            path: /tmp/Mokrane.txt
+            line: 'et moi je suis pierre'
+
+        - name: "[FICHIERS] - modifier la ligne"
+          lineinfile:
+            path: /tmp/Mokrane.txt
+            regexp: '(.*)Mokrane(.*)'
+            line: '\1Paul\2'
+            backrefs: yes
+
+        - name: "[FICHIER] - ajouter toto"
+          lineinfile:
+            path: /tmp/Mokrane.txt
+            insertbefore: '(.*)Mokrane(.*)'
+            line: "mon prénom c'est toto"
+      when: data != check5   
